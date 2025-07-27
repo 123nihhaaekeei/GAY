@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Elysians Set Generator</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      color: #ffffff;
+      text-align: center;
+      overflow-x: hidden;
+      min-height: 100vh;
+      background: radial-gradient(ellipse at bottom, #1b2735 0%, #090a0f 100%);
+      position: relative;
+    }
+
+    .stars, .stars2, .stars3 {
+      position: fixed;
+      width: 100%;
+      height: 100%;
+      background-repeat: repeat;
+      background-size: contain;
+      animation: moveStars 200s linear infinite;
+      z-index: 0;
+    }
+    .stars { background-image: url('https://i.imgur.com/FoZ6YGF.png'); }
+    .stars2 { background-image: url('https://i.imgur.com/FoZ6YGF.png'); animation-duration: 300s; opacity: 0.5; }
+    .stars3 { background-image: url('https://i.imgur.com/FoZ6YGF.png'); animation-duration: 400s; opacity: 0.3; }
+
+    @keyframes moveStars {
+      from { transform: translateY(0); }
+      to { transform: translateY(-1000px); }
+    }
+
+    .container {
+      position: relative;
+      z-index: 2;
+      max-width: 600px;
+      margin: auto;
+      padding: 40px 20px;
+    }
+
+    h1 {
+      font-size: 2.5rem;
+      margin-bottom: 1rem;
+    }
+
+    label {
+      display: block;
+      margin: 12px 0 4px;
+      font-weight: bold;
+    }
+
+    input, select {
+      width: 100%;
+      padding: 10px;
+      font-size: 1rem;
+      border-radius: 8px;
+      border: none;
+      margin-bottom: 10px;
+    }
+
+    button {
+      background-color: #7289da;
+      border: none;
+      padding: 12px 20px;
+      font-size: 1rem;
+      border-radius: 8px;
+      cursor: pointer;
+      color: white;
+      margin-top: 10px;
+    }
+
+    button:hover {
+      background-color: #5b6eae;
+    }
+
+    .output {
+      margin-top: 20px;
+      text-align: left;
+      white-space: pre-wrap;
+      background: rgba(0, 0, 0, 0.5);
+      padding: 15px;
+      border-radius: 10px;
+      max-height: 300px;
+      overflow-y: auto;
+    }
+
+    .footer {
+      margin-top: 30px;
+    }
+
+    a.discord-button {
+      display: inline-block;
+      background-color: #7289da;
+      color: white;
+      text-decoration: none;
+      padding: 10px 20px;
+      border-radius: 8px;
+      margin-top: 10px;
+    }
+
+    a.discord-button:hover {
+      background-color: #5b6eae;
+    }
+  </style>
+</head>
+<body>
+  <div class="stars"></div>
+  <div class="stars2"></div>
+  <div class="stars3"></div>
+
+  <div class="container">
+    <h1>Elysians Set Generator</h1>
+
+    <label for="pingInput">Your Ping (ms):</label>
+    <input type="number" id="pingInput" placeholder="e.g. 75" />
+
+    <label for="gameSelect">Game:</label>
+    <select id="gameSelect">
+      <option value="arhood">Arhood</option>
+      <option value="yenohood">Yenohood</option>
+      <option value="danffa">DanFFA</option>
+      <option value="hc">HC</option>
+    </select>
+
+    <label for="amountInput">Amount of Sets:</label>
+    <input type="number" id="amountInput" placeholder="e.g. 5" min="1" />
+
+    <button onclick="generate()">Generate Sets</button>
+    <button onclick="download()">Download .txt</button>
+
+    <div class="output" id="outputBox">Your generated sets will appear here.</div>
+
+    <div class="footer">
+      <a class="discord-button" href="https://discord.gg/vSUK57aAJn" target="_blank">Join Discord</a>
+    </div>
+  </div>
+
+  <script>
+    function generateJumpOffset(game) {
+      if (["arhood", "yenohood"].includes(game)) {
+        return Math.random() < 0.75
+          ? (Math.random() * (0.05 - 0.0001) + 0.0001).toFixed(5)
+          : (Math.random() * (0.99 - 0.75) + 0.75).toFixed(2);
+      } else if (["danffa", "hc"].includes(game)) {
+        return (Math.random() * (0.45 - 0.01) + 0.01).toFixed(3);
+      } else {
+        return "0.000";
+      }
+    }
+
+    function generateSet(ping) {
+      const base = Math.random() * (0.19 - 0.13) + 0.13;
+      const tailLength = Math.floor(Math.random() * 5) + 7;
+      const tail = Array.from({ length: tailLength }, () => Math.floor(Math.random() * 10)).join('');
+      return base.toFixed(6) + tail;
+    }
+
+    function generate() {
+      const ping = parseFloat(document.getElementById('pingInput').value);
+      const game = document.getElementById('gameSelect').value;
+      const amount = parseInt(document.getElementById('amountInput').value);
+      const outputBox = document.getElementById('outputBox');
+
+      if (isNaN(ping) || isNaN(amount) || amount < 1 || ping < 0) {
+        outputBox.textContent = "Invalid ping or amount.";
+        return;
+      }
+
+      let results = [];
+      const setSet = new Set();
+      const offsetSet = new Set();
+
+      for (let i = 0; i < amount; i++) {
+        let set;
+        let attempts = 0;
+        do {
+          set = generateSet(ping);
+          attempts++;
+        } while (setSet.has(set) && attempts < 50);
+        setSet.add(set);
+
+        let offset;
+        attempts = 0;
+        do {
+          offset = generateJumpOffset(game);
+          attempts++;
+        } while (offsetSet.has(offset) && attempts < 50);
+        offsetSet.add(offset);
+
+        results.push(`Set ${i + 1}: ${set} | Offset: ${offset}`);
+      }
+
+      outputBox.textContent = results.join('\n');
+    }
+
+    function download() {
+      const output = document.getElementById('outputBox').textContent;
+      if (!output || output.startsWith("Invalid")) return;
+      const blob = new Blob([output], { type: 'text/plain' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'elysians sets.txt';
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+  </script>
+</body>
+</html>
